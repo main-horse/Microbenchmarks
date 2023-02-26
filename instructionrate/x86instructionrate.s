@@ -106,6 +106,11 @@
 .global fma4_256
 .global fma4_128
 
+.global testfusion
+.global cmpfusion
+.global subfusion
+.global nopfusion
+
 /*
   %rdi = arg0 = iteration count
 */
@@ -5139,4 +5144,78 @@ fma4_128_loop:
   vzeroupper
   pop %r8
   pop %r9
+  ret
+
+
+  testfusion:
+  push %rbx
+  push %r8
+  push %r9
+  push %r10
+  xor %rax, %rax
+  not %rax
+testfusion_loop:
+  xor %r8, %r8
+  xor %r9, %r9
+  sub $5, %rdi
+  test %rdi, %rax
+  jnz testfusion_loop
+  pop %r10
+  pop %r9
+  pop %r8
+  pop %rbx
+  ret
+
+cmpfusion:
+  push %rbx
+  push %r8
+  push %r9
+  push %r10
+  xor %rax, %rax
+cmpfusion_loop:
+  xor %r8, %r8
+  xor %r9, %r9
+  sub $5, %rdi
+  cmp %rdi, %rax
+  jnz cmpfusion_loop
+  pop %r10
+  pop %r9
+  pop %r8
+  pop %rbx
+  ret
+
+subfusion:
+  push %rbx
+  push %r8
+  push %r9
+  push %r10
+  xor %rax, %rax
+subfusion_loop:
+  xor %r8, %r8
+  xor %r9, %r9
+  xor %r10, %r10
+  sub $5, %rdi
+  jnz subfusion_loop
+  pop %r10
+  pop %r9
+  pop %r8
+  pop %rbx
+  ret
+
+nopfusion:
+  push %rbx
+  push %r8
+  push %r9
+  push %r10
+  xor %rax, %rax
+nopfusion_loop:
+  sub $5, %rdi
+  nop
+  nop
+  nop
+  jnz nopfusion_loop
+  pop %r10
+  pop %r9
+  pop %r8
+  pop %rbx
   ret
