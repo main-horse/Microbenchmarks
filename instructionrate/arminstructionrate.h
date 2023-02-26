@@ -67,11 +67,6 @@ extern uint64_t xorzerotest(uint64_t iterations) asm("xorzerotest");
 extern uint64_t movzerotest(uint64_t iterations) asm("movzerotest");
 extern uint64_t subzerotest(uint64_t iterations) asm("subzerotest");
 
-// fusion tests
-extern uint64_t testfusion(uint64_t iterations) asm("testfusion") __attribute((sysv_abi));
-extern uint64_t cmpfusion(uint64_t iterations) asm("cmpfusion") __attribute((sysv_abi));
-extern uint64_t subfusion(uint64_t iterations) asm("subfusion")__attribute((sysv_abi));
-extern uint64_t nopfusion(uint64_t iterations) asm("nopfusion") __attribute((sysv_abi));
 
 float fpTestArr[4] __attribute__ ((aligned (64))) = { 0.2, 1.5, 2.7, 3.14 };
 int intTestArr[4] __attribute__ ((aligned (64))) = { 1, 2, 3, 4 };
