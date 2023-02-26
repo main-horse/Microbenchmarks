@@ -305,6 +305,16 @@ int main(int argc, char *argv[])
     printf("256-bit stores per clk: %.2f\n", measureFunction(iterations, clkSpeed, store256wrapper));
   if (argumentCheck(argc, argv[1], "mixaddmul128int", 15) == 0)
     printf("1:1 mixed 128-bit vec add/mul per clk: %.2f\n", measureFunction(iterations, clkSpeed, mixaddmul128int));
+  
+  //Testing for instruction fusion
+  if (argumentCheck(argc, argv[1], "testfusion", 10) == 0)
+    printf("test+jnz: %.2f\n", measureFunction(iterations, clkSpeed, testfusion));
+  if (argumentCheck(argc, argv[1], "cmpfusion", 9) == 0)
+    printf("cmp+jnz: %.2f\n", measureFunction(iterations, clkSpeed, cmpfusion));
+  if (argumentCheck(argc, argv[1], "subfusion", 9) == 0)
+    printf("sub+jnz: %.2f\n", measureFunction(iterations, clkSpeed, subfusion));
+  if (argumentCheck(argc, argv[1], "nopfusion", 9) == 0)
+    printf("nop+jnz: %.2f\n", measureFunction(iterations, clkSpeed, nopfusion));
 
   return 0;
 }
