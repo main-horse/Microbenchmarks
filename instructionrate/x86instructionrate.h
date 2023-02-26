@@ -117,6 +117,11 @@ extern uint64_t mix256faddintadd(uint64_t iterations) asm("mix256faddintadd") __
 extern uint64_t fma4_256(uint64_t iterations) asm("fma4_256") __attribute((sysv_abi));
 extern uint64_t fma4_128(uint64_t iterations) asm("fma4_128") __attribute((sysv_abi));
 
+extern uint64_t testfusion(uint64_t iterations) asm("testfusion") __attribute((sysv_abi));
+extern uint64_t cmpfusion(uint64_t iterations) asm("cmpfusion") __attribute((sysv_abi));
+extern uint64_t subfusion(uint64_t iterations) asm("subfusion")__attribute((sysv_abi));
+extern uint64_t nopfusion(uint64_t iterations) asm("nopfusion") __attribute((sysv_abi));
+
 float fpTestArr[8] __attribute__ ((aligned (64))) = { 0.2, 1.5, 2.7, 3.14, 5.16, 6.3, 7.7, 9.45 };
 float fpSinkArr[8] __attribute__ ((aligned (64))) = { 2.1, 3.2, 4.3, 5.4, 6.2, 7.8, 8.3, 9.4 };
 int intTestArr[intTestArrLength] __attribute__ ((aligned (64)));
