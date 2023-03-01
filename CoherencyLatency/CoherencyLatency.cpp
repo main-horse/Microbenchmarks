@@ -20,7 +20,8 @@ DWORD WINAPI ReadLatencyTestThread(LPVOID param);
 LONG64* bouncyBase;
 LONG64* bouncy;
 
-typedef struct LatencyThreadData {
+typedef struct LatencyThreadData 
+{
     uint64_t start;       // initial value to write into target
     uint64_t iterations;  // number of iterations to run
     LONG64 *target;       // value to bounce between threads, init with start - 1
@@ -28,7 +29,8 @@ typedef struct LatencyThreadData {
     DWORD affinityMask;   // thread affinity mask to set
 } LatencyData;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char *argv[]) 
+{
     SYSTEM_INFO sysInfo;
     DWORD numProcs;
     float** latencies;
@@ -36,24 +38,34 @@ int main(int argc, char *argv[]) {
     int offsets = 1;
     float (*test)(unsigned int, unsigned int, uint64_t) = RunTest;
 
-    for (int argIdx = 1; argIdx < argc; argIdx++) {
-        if (*(argv[argIdx]) == '-') {
+    for (int argIdx = 1; argIdx < argc; argIdx++) 
+	{
+        if (*(argv[argIdx]) == '-') 
+		{
             char* arg = argv[argIdx] + 1;
-            if (_strnicmp(arg, "iterations", 10) == 0) {
+            //Parse -iterations argument
+            if (_strnicmp(arg, "iterations", 10) == 0) 
+			{
                 argIdx++;
                 iter = atoi(argv[argIdx]);
                 fprintf(stderr, "%lu iterations requested\n", iter);
             }
-            else if (_strnicmp(arg, "bounce", 6) == 0) {
+            //Parse -bounce argument
+            else if (_strnicmp(arg, "bounce", 6) == 0) 
+			{
                 //Missing implementation of branch logic
 				fprintf(stderr, "Bouncy\n");
             }
-            else if (_strnicmp(arg, "owned", 5) == 0) {
+            //Parse -owned argument
+            else if (_strnicmp(arg, "owned", 5) == 0) 
+			{
                 argIdx++;
 				test = RunOwnedTest;
                 fprintf(stderr, "Using separate cache lines for each thread to write to\n");
             }
-            else if (_strnicmp(arg, "offset", 6) == 0) {
+            //Parse -offset argument
+            else if (_strnicmp(arg, "offset", 6) == 0) 
+			{
                 argIdx++;
                 offsets = atoi(argv[argIdx]);
                 fprintf(stderr, "Offsets: %d\n", offsets);
@@ -63,40 +75,49 @@ int main(int argc, char *argv[]) {
 
     bouncyBase = (LONG64*)_aligned_malloc(64 * offsets, 4096);
     bouncy = bouncyBase;
-    if (bouncy == NULL) {
+    if (bouncy == NULL) 
+	{
         fprintf(stderr, "Could not allocate aligned mem\n");
+        return 0;
     }
 
     GetSystemInfo(&sysInfo);
     numProcs = sysInfo.dwNumberOfProcessors;
     fprintf(stderr, "Number of CPUs: %u\n", numProcs);
     latencies = (float **)malloc(sizeof(float*) * offsets);
-    if (latencies == NULL) {
+    if (latencies == NULL) 
+	{
         fprintf(stderr, "couldn't allocate result array\n");
         return 0;
     }
 
-    for (DWORD offsetIdx = 0; offsetIdx < offsets; offsetIdx++) {
+    for (DWORD offsetIdx = 0; offsetIdx < offsets; offsetIdx++) 
+	{
         bouncy = (LONG64*)((char*)bouncyBase + offsetIdx * 64);
         latencies[offsetIdx] = (float*)malloc(sizeof(float) * numProcs * numProcs);
         float* latenciesPtr = latencies[offsetIdx];
 
         // Run all to all, skipping testing a core against itself ofc
         // technically can skip the other way around (start j = i + 1) but meh
-        for (DWORD i = 0; i < numProcs; i++) {
-            for (DWORD j = 0; j < numProcs; j++) {
+        for (DWORD i = 0; i < numProcs; i++) 
+		{
+            for (DWORD j = 0; j < numProcs; j++) 
+			{
                 latenciesPtr[j + i * numProcs] = i == j ? 0 : test(i, j, iter);
             }
         }
     }
 
-    for (DWORD offsetIdx = 0; offsetIdx < offsets; offsetIdx++) {
+    for (DWORD offsetIdx = 0; offsetIdx < offsets; offsetIdx++) 
+	{
         printf("Cache line offset: %d\n", offsetIdx);
         float* latenciesPtr = latencies[offsetIdx];
 
         // print thing to copy to excel
-        for (DWORD i = 0; i < numProcs; i++) {
-            for (DWORD j = 0; j < numProcs; j++) {
+        for (DWORD i = 0; i < numProcs; i++) 
+		{
+            for (DWORD j = 0; j < numProcs; j++) 
+			{
                 if (j != 0) printf(",");
                 if (j == i) printf("x");
                 else printf("%f", latenciesPtr[j + i * numProcs]);
@@ -112,7 +133,8 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-float TimeThreads(unsigned int processor1, unsigned int processor2, uint64_t iter, LatencyData lat1, LatencyData lat2, DWORD (*threadFunc)(LPVOID)) {
+float TimeThreads(unsigned int processor1, unsigned int processor2, uint64_t iter, LatencyData lat1, LatencyData lat2, DWORD (*threadFunc)(LPVOID)) 
+{
     struct timeb start, end;
     HANDLE testThreads[2];
     DWORD tid1, tid2;
@@ -120,7 +142,8 @@ float TimeThreads(unsigned int processor1, unsigned int processor2, uint64_t ite
     testThreads[0] = CreateThread(NULL, 0, threadFunc, &lat1, CREATE_SUSPENDED, &tid1);
     testThreads[1] = CreateThread(NULL, 0, threadFunc, &lat2, CREATE_SUSPENDED, &tid2);
 
-    if (testThreads[0] == NULL || testThreads[1] == NULL) {
+    if (testThreads[0] == NULL || testThreads[1] == NULL) 
+	{
         fprintf(stderr, "Failed to create test threads\n");
         return -1;
     }
@@ -154,7 +177,8 @@ float TimeThreads(unsigned int processor1, unsigned int processor2, uint64_t ite
 /// <param name="iter">Number of iterations</param>
 /// <param name="bouncy">aligned mem to bounce around</param>
 /// <returns>latency per iteration in ns</returns>
-float RunTest(unsigned int processor1, unsigned int processor2, uint64_t iter) {
+float RunTest(unsigned int processor1, unsigned int processor2, uint64_t iter) 
+{
     LatencyData lat1, lat2;
     float latency;
 
@@ -170,7 +194,8 @@ float RunTest(unsigned int processor1, unsigned int processor2, uint64_t iter) {
     return latency;
 }
 
-float RunOwnedTest(unsigned int processor1, unsigned int processor2, uint64_t iter) {
+float RunOwnedTest(unsigned int processor1, unsigned int processor2, uint64_t iter) 
+{
     LatencyData lat1, lat2;
     LONG64* target1, * target2;
     float latency;
@@ -178,7 +203,8 @@ float RunOwnedTest(unsigned int processor1, unsigned int processor2, uint64_t it
     // drop them on different cache lines
     target1 = (LONG64*)_aligned_malloc(128, 64);
     target2 = target1 + 8;
-    if (target1 == NULL) {
+    if (target1 == NULL) 
+	{
         fprintf(stderr, "Could not allocate aligned mem\n");
     }
 
@@ -204,10 +230,12 @@ float RunOwnedTest(unsigned int processor1, unsigned int processor2, uint64_t it
 /// </summary>
 /// <param name="param">Latency test params</param>
 /// <returns>next value that would have been written to shared memory</returns>
-DWORD WINAPI LatencyTestThread(LPVOID param) {
+DWORD WINAPI LatencyTestThread(LPVOID param) 
+{
     LatencyData *latencyData = (LatencyData *)param;
     uint64_t current = latencyData->start;
-    while (current <= 2 * latencyData->iterations) {
+    while (current <= 2 * latencyData->iterations) 
+	{
         if (_InterlockedCompareExchange64(latencyData->target, current, current - 1) == current - 1) {
             current += 2;
         }
@@ -222,12 +250,15 @@ DWORD WINAPI LatencyTestThread(LPVOID param) {
 /// </summary>
 /// <param name="param">Latency test params</param>
 /// <returns>next value that would have been written to owned mem</returns>
-DWORD WINAPI ReadLatencyTestThread(LPVOID param) {
+DWORD WINAPI ReadLatencyTestThread(LPVOID param) 
+{
     LatencyData* latencyData = (LatencyData*)param;
     uint64_t current = latencyData->start;
     uint64_t startTsc = __rdtsc();
-    while (current <= 2 * latencyData->iterations) {
-        if (*(latencyData->readTarget) == current - 1) {
+    while (current <= 2 * latencyData->iterations) 
+	{
+        if (*(latencyData->readTarget) == current - 1) 
+		{
             *(latencyData->target) = current;
             current += 2;
             _mm_sfence();
