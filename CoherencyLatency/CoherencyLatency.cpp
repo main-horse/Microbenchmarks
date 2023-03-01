@@ -1,3 +1,9 @@
+/*My current intention is to delete this version after implementing Windows friendly options into the Pthreads test
+*This will mean pthreads is required for all versions of the test, which is fine as I don't presently support or test MSVC
+*However, clang in VS does not have pthreads, so this could present an obstacle in that case.
+*I welcome feedback on this decision.  --Nintonito
+*Clam did all the hard work, I just cleaned it up a bit
+*/
 #include <stdio.h>
 #include <stdint.h>
 #include <sys\timeb.h>
@@ -39,10 +45,12 @@ int main(int argc, char *argv[]) {
                 fprintf(stderr, "%lu iterations requested\n", iter);
             }
             else if (_strnicmp(arg, "bounce", 6) == 0) {
-                fprintf(stderr, "Bouncy\n");
+                //Missing implementation of branch logic
+				fprintf(stderr, "Bouncy\n");
             }
             else if (_strnicmp(arg, "owned", 5) == 0) {
-                test = RunOwnedTest;
+                argIdx++;
+				test = RunOwnedTest;
                 fprintf(stderr, "Using separate cache lines for each thread to write to\n");
             }
             else if (_strnicmp(arg, "offset", 6) == 0) {
