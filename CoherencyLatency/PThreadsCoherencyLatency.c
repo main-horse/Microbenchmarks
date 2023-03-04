@@ -1,5 +1,5 @@
-/*Current goal is to finish adding comments, and then attempt to implement Windows and optionally MacOS compatibility
-*Ideally this would mean only only version of the test is required
+/*Current goal is to finish adding comments, and then attempt to implement other OS compatibility
+*Ideally this would mean only one version of the test is required
 *It may not be overly reasonably depending on how different the test works on different operating systems
 *Clam did all the hard work, I just cleaned it up a bit
 */
@@ -11,13 +11,16 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <unistd.h>
+#include <sched.h>
+#include <pthread.h>
+
+#ifdef __linux__
 #include <sys/sysinfo.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/syscall.h>
-#include <unistd.h>
-#include <sched.h>
-#include <pthread.h>
+#endif
 
 #define ITERATIONS 10000000;
 
