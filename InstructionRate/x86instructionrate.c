@@ -369,7 +369,7 @@ float measureFunction(uint64_t iterations, float clkSpeed, __attribute((sysv_abi
     return opsPerNs / clkSpeed;
 }
 
-//A series of currently necessary wrapper functions to avoid array loading issues in the load/store tests
+//A series of currently necessary wrapper functions to avoid function parameter mismatching with the measure function
 __attribute((sysv_abi)) uint64_t load128wrapper(uint64_t iterations)
 {
   return load128(iterations, intTestArr);
