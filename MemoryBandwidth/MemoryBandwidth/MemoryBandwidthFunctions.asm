@@ -14,6 +14,10 @@ global avx_asm_copy
 global avx_asm_cflip
 global avx_asm_add
 global avx512_asm_read
+global clzero_asm_write
+
+global repmovsb_copy
+global repstosb_write
 
 ; rcx = float ptr to arr, rdx = fp32 elements in arr, r8 = iterations, r9 = start index
 ; return something in xmm0
@@ -398,6 +402,59 @@ asm_avx512_test_iteration_count:
   jnz avx512_asm_read_pass_loop ; skip iteration decrement if we're not back to start
   dec r8
   jnz avx512_asm_read_pass_loop
+  pop r14
+  pop r15
+  pop rbx
+  pop rdi
+  pop rsi
+  ret
+
+clzero_asm_write:
+  push rsi
+  push rdi
+  push rbx
+  push r15
+  push r14
+  mov r15, 256 ; load in blocks of 256 bytes
+  sub rdx, 128 ; last iteration: rsi == rdx. rsi > rdx = break
+  xor r9, r9   ; not doing start anymore, too lazy to clean up code
+  ; mov rsi, r9  ; assume we're passed in an aligned start location O.o
+  xor rsi, rsi
+  xor rbx, rbx
+  lea rdi, [rcx + rsi * 4]
+  mov r14, rdi
+clzero_asm_write_pass_loop:
+  mov rax, rdi
+  clzero
+  add rax, 64
+  clzero
+  add rax, 64
+  clzero
+  add rax, 64
+  clzero
+  add rsi, 64
+  add rdi, r15
+  mov rax, rdi
+  clzero
+  add rax, 64
+  clzero
+  add rax, 64
+  clzero
+  add rax, 64
+  clzero
+  add rsi, 64
+  add rdi, r15
+  cmp rdx, rsi
+  jge clzero_asm_write_iteration_count
+  mov rsi, rbx
+  lea rdi, [rcx + rsi * 4]  ; back to start
+clzero_asm_write_iteration_count:
+  cmp r9, rsi
+  jnz clzero_asm_write_pass_loop ; skip iteration decrement if we're not back to start
+  dec r8
+  sfence
+  jnz clzero_asm_write_pass_loop
+  mov rax, 1
   pop r14
   pop r15
   pop rbx
@@ -815,4 +872,73 @@ sse_add_iteration_count:
   pop rbx
   pop rdi
   pop rsi
+  ret
+
+
+; rcx = float ptr to arr, rdx = fp32 elements in arr, r8 = iterations
+repmovsb_copy:
+  push r15
+  push r14
+  push r13
+  push r12
+  push rsi
+  push rdi
+  push rax
+  cld
+  ; source = rsi, destination = rdi, count (in bytes) = rcx
+  mov rsi, rcx  ; set source
+  shr rdx, 1    ; set destination = source + (size / 2)
+  mov rdi, rcx
+  add rdi, rdx
+  mov rcx, rdx  ; set count = (size / 2) * (4 bytes per fp32 element)
+  shl rcx, 2
+  mov r12, rsi
+  mov r13, rdi
+  mov r14, rcx
+repmovsb_copy_pass_loop:
+  mov rsi, r12
+  mov rdi, r13
+  mov rcx, r14
+  rep movsb
+  dec r8
+  jnz repmovsb_copy_pass_loop
+  movss xmm0, [r12]
+  pop rax
+  pop rdi
+  pop rsi
+  pop r12
+  pop r13
+  pop r14
+  pop r15
+  ret
+
+; rcx = float ptr to arr, rdx = fp32 elements in arr, r8 = iterations
+repstosb_write:
+  push r15
+  push r14
+  push r13
+  push r12
+  push rsi
+  push rdi
+  push rax
+  cld
+  ; source = value in al, destination = rdi, count (in bytes) = rcx
+  mov al, 1  ; set source
+  mov r13, rcx  ; destination = start of arr
+  mov r14, rdx  
+  shl r14, 2    ; count = (nr of FP32 elements) * 4
+repstosb_write_pass_loop:
+  mov rdi, r13
+  mov rcx, r14
+  rep stosb
+  dec r8
+  jnz repstosb_write_pass_loop
+  movss xmm0, [r13]
+  pop rax
+  pop rdi
+  pop rsi
+  pop r12
+  pop r13
+  pop r14
+  pop r15
   ret
