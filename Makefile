@@ -1,6 +1,6 @@
 include Common/arch_detect.mk
 
-COMPONENTS = CoherencyLatency MemoryLatency MemoryBandwidth InstructionRate Meshsim CoreClockChecker GpuMemLatency
+COMPONENTS = CoherencyLatency MemoryLatency MemoryBandwidth InstructionRate CoreClockChecker GpuMemLatency
 
 all: $(COMPONENTS) 
 
